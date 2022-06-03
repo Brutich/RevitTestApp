@@ -10,12 +10,12 @@ namespace RevitTestApp
     {
         private readonly UpdaterId updaterId;
         private readonly string updaterName = nameof(CopyIdToParameterUpdater);
-        private readonly Settings settings;
+        private readonly TestApplication addin;
 
-        public CopyIdToParameterUpdater(AddInId appId, Settings settings)
+        internal CopyIdToParameterUpdater(AddInId appId, TestApplication addin)
         {
             updaterId = new UpdaterId(appId, new Guid("F3DC7620-72DC-4D70-9D7E-63CCF3530308"));
-            this.settings = settings ?? throw new ArgumentNullException(nameof(settings));
+            this.addin = addin ?? throw new ArgumentNullException(nameof(addin));
         }
 
         public string GetAdditionalInformation() => "Copies the element ID to a predefined parameter when the element is created.";
@@ -28,7 +28,7 @@ namespace RevitTestApp
 
         public void Execute(UpdaterData data)
         {
-            if (!settings.IsActive)
+            if (!addin.IsUpdaterActive)
                 return;
 
             ICollection<ElementId> addedElementIds = data.GetAddedElementIds();
@@ -42,30 +42,57 @@ namespace RevitTestApp
                 Element element = document.GetElement(elemId)
                     ?? throw new InvalidOperationException($"Unexpectedly there is no element with this ID: {elemId.IntegerValue}");
 
-                IList<Parameter> parameters = element.GetParameters(settings.ParameterName);
+                IList<Parameter> parameters = element.GetParameters(addin.TargetParameterName)
+                    .Where(p => p.StorageType == StorageType.String)
+                    .Where(p => !p.IsReadOnly)
+                    .ToList();
 
                 if (!parameters.Any())
                 {
-                    TaskDialog.Show(nameof(CopyIdToParameterUpdater),
-                        $"Failed to assign value to parameter: {settings.ParameterName}." + Environment.NewLine +
-                        $"Updater will be stoped." + Environment.NewLine +
-                        $"Check settings and try start again.");
-
-                    settings.IsActive = false;
+                    StopWithErrorMessage();
                     return;
                 }
 
                 Parameter parameter = parameters
-                    .OrderByDescending(p => !p.IsReadOnly)
                     .OrderByDescending(p => p.Definition is InternalDefinition def && def.BuiltInParameter != BuiltInParameter.INVALID)
                     .First();
 
-                parameter.Set($"{elemId.IntegerValue}");
+                try
+                {
+                    if (parameter.Set($"{elemId.IntegerValue}"))
+                        continue;
+
+                    StopWithErrorMessage();
+                    return;
+                }
+                catch
+                {
+                    StopWithErrorMessage();
+                }
+            }
+
+            void StopWithErrorMessage()
+            {
+                TaskDialog.Show(nameof(CopyIdToParameterUpdater),
+                    $"Failed to assign value to parameter: {addin.TargetParameterName}" + Environment.NewLine +
+                    $"Updater will be stoped." + Environment.NewLine +
+                    $"Check settings and try start again.");
+
+                addin.IsUpdaterActive = false;
             }
         }
 
-        internal ElementFilter GetUpdaterFilter(ICollection<BuiltInCategory> targetCategories)
+        internal ElementFilter GetUpdaterFilter()
         {
+            ICollection<BuiltInCategory> targetCategories = new[]
+            {
+                BuiltInCategory.OST_Walls,
+                BuiltInCategory.OST_Floors,
+                BuiltInCategory.OST_StructuralColumns,
+                BuiltInCategory.OST_StructuralFraming,
+                BuiltInCategory.OST_StructuralFoundation,
+            };
+
             IList<ElementFilter> categoryFilters = targetCategories
                 .Select(category => new ElementCategoryFilter(category))
                 .Cast<ElementFilter>()

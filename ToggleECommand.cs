@@ -10,11 +10,7 @@ namespace RevitTestApp
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
             TestApplication addinInstance = TestApplication.Instance;
-            Settings settings = addinInstance.Settings;
-
-            settings.IsActive = !settings.IsActive;
-
-            addinInstance.UpdateToggleBotton();
+            addinInstance.IsUpdaterActive = !addinInstance.IsUpdaterActive;
 
             return Result.Succeeded;
         }

@@ -1,26 +1,20 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
+using System.Runtime.Serialization;
 using System.Windows.Media.Imaging;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using RevitTestApp.SelectParameter;
+using RevitTestApp.Services;
+using Settings = RevitTestApp.Services.Settings;
 
 namespace RevitTestApp
 {
     public class TestApplication : IExternalApplication
     {
-        private readonly ICollection<BuiltInCategory> targetCategories = new[]
-        {
-            BuiltInCategory.OST_Walls,
-            BuiltInCategory.OST_Floors,
-            BuiltInCategory.OST_StructuralColumns,
-            BuiltInCategory.OST_StructuralFraming,
-            BuiltInCategory.OST_StructuralFoundation,
-        };
+        private ISettingsStorageService settingsStorageService;
         private CopyIdToParameterUpdater updater;
+        private bool isUpdaterActive;
         private PushButton pbToggle;
 
         /// <summary>
@@ -28,20 +22,30 @@ namespace RevitTestApp
         /// </summary>
         internal static TestApplication Instance { get; private set; }
 
-        internal Settings Settings { get; private set; }
+        internal string TargetParameterName { get; set; }
 
-        internal ICollection<BuiltInCategory> TargetCategories => targetCategories;
+        internal bool IsUpdaterActive
+        {
+            get => isUpdaterActive;
+            set { isUpdaterActive = value; UpdateToggleBotton(); }
+        }
 
         public Result OnStartup(UIControlledApplication application)
         {
+            // Save the instance of this addin so you can access it from external commands.
             Instance = this;
-            Settings = new Settings();
+
+            // Read the settings.
+            settingsStorageService = new InFileStorageService();
+            Settings settings = settingsStorageService.Read();
+            TargetParameterName = settings.ParameterName;
+            IsUpdaterActive = settings.IsActive;
 
             // Register updater to react to element creations.
-            updater = new CopyIdToParameterUpdater(application.ActiveAddInId, Settings);
+            updater = new CopyIdToParameterUpdater(application.ActiveAddInId, Instance);
             UpdaterRegistry.RegisterUpdater(updater);
             UpdaterRegistry.AddTrigger(
-                updater.GetUpdaterId(), updater.GetUpdaterFilter(TargetCategories), Element.GetChangeTypeElementAddition());
+                updater.GetUpdaterId(), updater.GetUpdaterFilter(), Element.GetChangeTypeElementAddition());
 
             // Create own tab with tools.
             AddRibbonTab(application);
@@ -51,7 +55,12 @@ namespace RevitTestApp
 
         public Result OnShutdown(UIControlledApplication application)
         {
+            // Unregister updater.
             UpdaterRegistry.UnregisterUpdater(updater.GetUpdaterId());
+
+            // Store the settings.
+            var settings = new Settings { ParameterName = TargetParameterName, IsActive = IsUpdaterActive };
+            settingsStorageService.Store(settings);
 
             return Result.Succeeded;
         }
@@ -96,14 +105,8 @@ namespace RevitTestApp
 
         internal void UpdateToggleBotton()
         {
-            pbToggle.ItemText = $" It's {Environment.NewLine} {(Settings.IsActive ? "ON" : "OFF")} ";
+            if (pbToggle is PushButton toggle)
+                toggle.ItemText = $" It's {Environment.NewLine} {(IsUpdaterActive ? "ON" : "OFF")} ";
         }
-    }
-
-    public class Settings
-    {
-        public bool IsActive { get; set; }
-
-        public string ParameterName { get; set; } = "";
     }
 }

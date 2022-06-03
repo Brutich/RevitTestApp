@@ -21,12 +21,11 @@ namespace RevitTestApp.SelectParameter
             }
 
             TestApplication addinInstance = TestApplication.Instance;
-            Settings addinSettings = addinInstance.Settings;
 
             try
             {
                 // Show dialog window allowing the user to choose a parameter name.
-                var viewModel = new SelectParameterVM(addinSettings.ParameterName);
+                var viewModel = new SelectParameterVM(addinInstance.TargetParameterName);
                 var dialogWindow = new SelectParameterView(viewModel);
                 if (dialogWindow.ShowDialog() != true)
                 {
@@ -34,7 +33,7 @@ namespace RevitTestApp.SelectParameter
                 }
 
                 // Update parameter name.
-                addinSettings.ParameterName = viewModel.ParameterName;
+                addinInstance.TargetParameterName = viewModel.ParameterName;
             }
             catch (Exception ex)
             {
