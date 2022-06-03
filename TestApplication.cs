@@ -98,15 +98,18 @@ namespace RevitTestApp
 
             pbToggle = ribbonPanelSettings.AddItem(toggleButtonData) as PushButton;
             pbToggle.ToolTip = "Enable/disable ID copying";
-            pbToggle.LargeImage = new BitmapImage(new Uri("pack://application:,,,/RevitTestApp;component/Resources/settings-32.png"));
+            pbToggle.LargeImage = new BitmapImage(new Uri("pack://application:,,,/RevitTestApp;component/Resources/on-32.png"));
             UpdateToggleBotton();
 
         }
 
         internal void UpdateToggleBotton()
         {
-            if (pbToggle is PushButton toggle)
-                toggle.ItemText = $" It's {Environment.NewLine} {(IsUpdaterActive ? "ON" : "OFF")} ";
+            if (!(pbToggle is PushButton toggle))
+                return;
+
+            toggle.ItemText = $" It's {Environment.NewLine} {(IsUpdaterActive ? "ON" : "OFF")} ";
+            pbToggle.LargeImage = new BitmapImage(new Uri($"pack://application:,,,/RevitTestApp;component/Resources/{(IsUpdaterActive ? "on" : "off")}-32.png"));
         }
     }
 }
