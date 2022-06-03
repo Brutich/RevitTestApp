@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<RevitAddIns>
+	<AddIn Type="Application">
+		<Name>RevitTestApp</Name>
+		<Assembly>RevitTestApp\RevitTestApp.dll</Assembly>
+		<AddInId>38C9983A-89A4-4284-9D92-4DB955743C88</AddInId>
+		<FullClassName>RevitTestApp.TestApplication</FullClassName>
+		<VendorId>Oleg Zholobov</VendorId>
+		<VendorDescription>https://github.com/Brutich</VendorDescription>
+	</AddIn>
+</RevitAddIns>
