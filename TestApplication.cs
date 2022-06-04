@@ -100,7 +100,6 @@ namespace RevitTestApp
             pbToggle.ToolTip = "Enable/disable ID copying";
             pbToggle.LargeImage = new BitmapImage(new Uri("pack://application:,,,/RevitTestApp;component/Resources/on-32.png"));
             UpdateToggleBotton();
-
         }
 
         internal void UpdateToggleBotton()

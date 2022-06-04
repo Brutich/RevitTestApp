@@ -65,7 +65,7 @@ namespace RevitTestApp
                     StopWithErrorMessage();
                     return;
                 }
-                catch
+                catch(InvalidOperationException)
                 {
                     StopWithErrorMessage();
                 }
@@ -93,12 +93,13 @@ namespace RevitTestApp
                 BuiltInCategory.OST_StructuralFoundation,
             };
 
-            IList<ElementFilter> categoryFilters = targetCategories
-                .Select(category => new ElementCategoryFilter(category))
-                .Cast<ElementFilter>()
-                .ToList();
+            var categoriesFilter = new LogicalOrFilter(
+                targetCategories.Select(category => new ElementCategoryFilter(category))
+                    .ToList<ElementFilter>());
 
-            return new LogicalOrFilter(categoryFilters);
+            var elementIsInstanceFilter = new ElementIsElementTypeFilter(inverted: true);
+
+            return new LogicalAndFilter(categoriesFilter, elementIsInstanceFilter);
         }
     }
 }
