@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Reflection;
-using System.Runtime.Serialization;
 using System.Windows.Media.Imaging;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
@@ -60,24 +59,24 @@ namespace RevitTestApp
 
             // Store the settings.
             var settings = new Settings { ParameterName = TargetParameterName, IsActive = IsUpdaterActive };
-            settingsStorageService.Store(settings);
+            settingsStorageService?.Store(settings);
 
             return Result.Succeeded;
         }
 
         void AddRibbonTab(UIControlledApplication application)
         {
-            // Create a custom ribbon tab.
+            // Create custom ribbon tab.
             string tabName = "Awesome Addin";
             application.CreateRibbonTab(tabName);
 
-            // Add a new ribbon panels.
+            // Add new ribbon panel.
             RibbonPanel ribbonPanelSettings = application.CreateRibbonPanel(tabName, "Fabulous Commands");
 
             // Get paths.
             string thisAssemblyPath = Assembly.GetExecutingAssembly().Location;
 
-            // create push button for Select Parameter
+            // Create push button for Select Parameter.
             var selectorButtonData = new PushButtonData(
                 "selectorData",
                 " Select " + Environment.NewLine +
@@ -89,7 +88,7 @@ namespace RevitTestApp
             pbSelector.ToolTip = "Select parameter to copy element ID.";
             pbSelector.LargeImage = new BitmapImage(new Uri("pack://application:,,,/RevitTestApp;component/Resources/settings-32.png"));
 
-            // create push button for Indicator
+            // Create push button for Indicator.
             var toggleButtonData = new PushButtonData(
                 "toggleData",
                 " ON/OFF ",
@@ -97,17 +96,16 @@ namespace RevitTestApp
                 typeof(ToggleECommand).FullName);
 
             pbToggle = ribbonPanelSettings.AddItem(toggleButtonData) as PushButton;
-            pbToggle.ToolTip = "Enable/disable ID copying";
-            pbToggle.LargeImage = new BitmapImage(new Uri("pack://application:,,,/RevitTestApp;component/Resources/on-32.png"));
+            pbToggle.ToolTip = "Enable or disable ID copying";
             UpdateToggleBotton();
         }
 
         internal void UpdateToggleBotton()
         {
-            if (!(pbToggle is PushButton toggle))
+            if (pbToggle is null)
                 return;
 
-            toggle.ItemText = $" It's {Environment.NewLine} {(IsUpdaterActive ? "ON" : "OFF")} ";
+            pbToggle.ItemText = $" It's {Environment.NewLine} {(IsUpdaterActive ? "ON" : "OFF")} ";
             pbToggle.LargeImage = new BitmapImage(new Uri($"pack://application:,,,/RevitTestApp;component/Resources/{(IsUpdaterActive ? "on" : "off")}-32.png"));
         }
     }
