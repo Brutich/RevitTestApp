@@ -42,7 +42,7 @@ namespace RevitTestApp
 
             // Register updater to react to element creations.
             updater = new CopyIdToParameterUpdater(application.ActiveAddInId, Instance);
-            UpdaterRegistry.RegisterUpdater(updater);
+            UpdaterRegistry.RegisterUpdater(updater, isOptional: true);
             UpdaterRegistry.AddTrigger(
                 updater.GetUpdaterId(), updater.GetUpdaterFilter(), Element.GetChangeTypeElementAddition());
 
