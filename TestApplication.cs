@@ -100,7 +100,7 @@ namespace RevitTestApp
             UpdateToggleBotton();
         }
 
-        internal void UpdateToggleBotton()
+        private void UpdateToggleBotton()
         {
             if (pbToggle is null)
                 return;
